@@ -2,7 +2,7 @@ import express from 'express';
 
 import {
     listRestaurants
-} from '../controllers/restauranteController.js';
+} from '../controllers/restaurantController.js';
 
 const router = express.Router();
 
