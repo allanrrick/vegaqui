@@ -8,7 +8,7 @@ export async function listRestaurants(req, res) {
             name,
             description,
             type,
-            adress,
+            address,
             location
         `);
 
@@ -26,7 +26,7 @@ export async function createRestaurant(req, res) {
             name,
             description,
             type,
-            adress,
+            address,
             latitude,
             longitude
         } = req.body;

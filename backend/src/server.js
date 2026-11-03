@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
+import restaurantRoutes from './routes/restaurantRoutes.js';
+
 dotenv.config({ path: '../.env' });
 
 const app = express();
@@ -14,6 +16,9 @@ app.get('/', (req, res) => {
         message: 'API working well'
     });
 });
+
+app.use('/restaurants', restaurantRoutes);
+
 
 app.use((req, res) =>{
     res.status(404).json({
