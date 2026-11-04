@@ -37,7 +37,7 @@ export async function createRestaurant(req, res) {
                 p_name: name,
                 p_description: description,
                 p_type: type,
-                p_adress: adress,
+                p_address: address,
                 p_latitude: latitude,
                 p_longitude: longitude
             }
