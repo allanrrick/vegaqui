@@ -184,3 +184,52 @@ export async function restaurantsOnMap(req, res) {
         });
     }
 }
+
+// return points near a coordinate
+export async function nearbyRestaurants(req, res) {
+    try {
+        const { latitude, longitude, distance } = req.query;
+
+        const latid = Number(latitude);
+        const longi = Number(longitude);
+        const radius = Number(distance);
+
+        if (
+            latitude === undefined ||
+            longitude === undefined ||
+            distance === undefined ||
+            !Number.isFinite(latid) ||
+            !Number.isFinite(longi) ||
+            !Number.isFinite(radius) ||
+            latid < -90 || latid > 90 ||
+            longi < -180 || longi > 180 ||
+            radius <= 0
+        ) {
+            return res.status(400).json({
+                erro: error.message
+            });
+        }
+
+        const { data, error } = await supabase.rpc(
+            'nearby_restaurants',
+            {
+                latitude: latid,
+                longitude: longi,
+                distance: radius
+            }
+        );
+
+        if (error) {
+            return res.status(400).json({
+                erro: error.message
+            });
+        }
+
+        return res.status(200).json(data);
+
+    } catch (error) {
+        return res.status(500).json({
+            erro: error.message
+        });
+    }
+}
