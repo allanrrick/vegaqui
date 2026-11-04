@@ -4,6 +4,8 @@ import {
     createRestaurant,
     deleteRestaurant,
     listRestaurants,
+    nearbyRestaurants,
+    restaurantsOnMap,
     updateRestaurant
 } from '../controllers/restaurantController.js';
 
@@ -14,4 +16,6 @@ router.post('/', createRestaurant);
 router.put('/:id', updateRestaurant);
 router.delete('/:id', deleteRestaurant);
 
+router.get('/map', restaurantsOnMap);
+router.get('/nearby', nearbyRestaurants);
 export default router;
