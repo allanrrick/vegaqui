@@ -57,3 +57,81 @@ export async function createRestaurant(req, res) {
         });
     }
 }
+
+export async function updateRestaurant(req, res) {
+    try {
+        const { id } = req.params;
+
+        const {
+            name,
+            description,
+            type,
+            address,
+            latitude,
+            longitude
+        } = req.body;
+
+        const { data, error } = await supabase.rpc(
+            'update_restaurant',
+            {
+                p_id: id,
+                p_name: name,
+                p_description: description,
+                p_type: type,
+                p_address: address,
+                p_latitude: latitude,
+                p_longitude: longitude
+            }
+        );
+
+        if (error) {
+            return res.status(400).json({
+                erro: error.message
+            });
+        }
+
+        if (data === null) {
+            return res.status(404).json({
+                erro: error.message
+            });
+        }
+
+        return res.status(200).json(data);
+
+    } catch (error) {
+        return res.status(500).json({
+            erro: error.message
+        });
+    }
+}
+
+export async function deleteRestaurant(req, res) {
+    try {
+        const { id } = req.params;
+        
+        const { data, error } = await supabase.rpc(
+            'delete_restaurant',
+            {
+                p_id: id
+            }
+        );
+
+        if (error) {
+            return res.status(400).json({
+                erro: error.message
+            });
+        }
+        
+        if (data == null) {
+            return res.status(404).json({
+                erro: error.message
+            });
+        }
+
+        return res.status(200).json(data);
+    } catch (error) {
+        return res.status(500).json({
+            erro: error.message
+        });
+    }
+}
