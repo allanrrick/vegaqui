@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +7,53 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-    
+
+    <header class="header">
+        <a href="index.html" class="logo">
+            <img src="assets/logo.png">
+            <span>vegaqui</span>
+        </a>
+
+        <div class="search-container">
+            <span class="search-icon">⌕</span>
+            <input
+                type="search"
+                id="searchInput"
+                placeholder="Buscar"
+            >
+        </div>
+
+        <button id="addRestaurantButton" class="add-button">
+            Adicionar restaurante
+            <img src="assets/location.png">
+        </button>
+
+    </header>
+
+        <section class="filters">
+            
+            <label for="distanceInput">Distância:</label>
+
+            <input
+                type="number"
+                id="distanceInput"
+                step="1"
+            >
+
+        </section>
+
+        <section class="map-container">
+            <div id="map"></div>
+        </section>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <footer>
+        <a href="https://www.flaticon.com/free-icons/vegan" title="vegan icons">Vegan icons created by juicy_fish - Flaticon</a>
+        <a href="https://www.flaticon.com/free-icons/location" title="location icons">Location icons created by Magnific - Flaticon</a>
+    </footer>
 </body>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </html>
