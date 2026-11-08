@@ -24,6 +24,7 @@ function getUserLocation() {
             const accuracy = position.coords.accuracy;
 
             map.flyTo([latitude, longitude], 15);
+            loadRestaurants(latitude, longitude);
 
             if (userMarker) {
                 map.removeLayer(userMarker);
@@ -65,3 +66,23 @@ function getUserLocation() {
 }
 
 getUserLocation();
+
+async function loadRestaurants(latitude, longitude, distanceKm = 5) {
+    try {
+        const distance = distanceKm * 1000;
+
+        const response = await fetch(
+            `http://localhost:3000/restaurants/nearby?latitude=${latitude}&longitude=${longitude}&distance=${distance}`
+        );
+
+        if (!response.ok) {
+            throw new Error('Response error');
+        }
+
+        const restaurants = await response.json();
+        console.log(restaurants);
+
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
