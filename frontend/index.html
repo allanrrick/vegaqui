@@ -32,23 +32,26 @@
 
     </header>
 
-        <section class="filters">
-            
-            <label for="distanceInput">Distância:</label>
-
-            <input
-                type="number"
-                id="distanceInput"
-                step="1"
-            >
-
-        </section>
-
         <section class="map-container">
-            <div id="map"></div>
+            <section class="filters">
+                
+                <label for="distanceInput">Distância (km):</label>
+
+                <input
+                    type="number"
+                    id="distanceInput"
+                    min="0"
+                    step="1"
+                >
+
+            </section>
+
+                <div id="map"></div>
+
         </section>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/map.js"></script>
 
     <footer>
         <a href="https://www.flaticon.com/free-icons/vegan" title="vegan icons">Vegan icons created by juicy_fish - Flaticon</a>
