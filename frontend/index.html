@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VegAqui</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -18,11 +19,7 @@
 
         <div class="search-container">
             <span class="search-icon">⌕</span>
-            <input
-                type="search"
-                id="searchInput"
-                placeholder="Buscar"
-            >
+            <input type="search" id="searchInput" placeholder="Buscar">
         </div>
 
         <button id="addRestaurantButton" class="add-button">
@@ -32,31 +29,62 @@
 
     </header>
 
-        <section class="map-container">
-            <section class="filters">
-                
-                <label for="distanceInput">Distância (km):</label>
+    <section class="map-container">
+        <section class="filters">
 
-                <input
-                    type="number"
-                    id="distanceInput"
-                    min="1"
-                    step="1"
-                    placeholder="1"
-                >
+            <label for="distanceInput">Distância (km):</label>
 
-            </section>
-
-                <div id="map"></div>
+            <input type="number" id="distanceInput" min="1" step="1" placeholder="1">
 
         </section>
+
+        <div id="map"></div>
+
+    </section>
+
+    <div id="restaurantModal" class="modal">
+        <div class="modal-content">
+
+            <button id="closeModalButton" class="close-button">
+                &times;
+            </button>
+
+            <h2>Adicionar restaurante</h2>
+
+            <form id="restaurantForm">
+
+                <label for="restaurantName">Nome do restaurante</label>
+                <input type="text" id="restaurantName" required>
+
+                <label for="restaurantType">Tipo</label>
+                <select id="restaurantType" required>
+                    <option value="">Selecione</option>
+                    <option value="vegan">Opções Veganas</option>
+                    <option value="vegetarian">Opções Vegetarianas</option>
+                </select>
+
+                <label for="restaurantAddress">Endereço</label>
+                <input type="text" id="restaurantAddress" required>
+
+                <label for="restaurantDescription">Descrição</label>
+                <textarea id="restaurantDescription" rows="3"></textarea>
+
+                <button type="submit" class="submit-button">
+                    Continuar
+                </button>
+
+            </form>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/map.js"></script>
 
     <footer>
-        <a href="https://www.flaticon.com/free-icons/vegan" title="vegan icons">Vegan icons created by juicy_fish - Flaticon</a>
-        <a href="https://www.flaticon.com/free-icons/location" title="location icons">Location icons created by Magnific - Flaticon</a>
+        <a href="https://www.flaticon.com/free-icons/vegan" title="vegan icons">Vegan icons created by juicy_fish -
+            Flaticon</a>
+        <a href="https://www.flaticon.com/free-icons/location" title="location icons">Location icons created by Magnific
+            - Flaticon</a>
     </footer>
 </body>
 

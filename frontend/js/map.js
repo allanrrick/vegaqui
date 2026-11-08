@@ -9,6 +9,11 @@ let userMarker = null;
 let restaurantMarkers = []
 let userLatitude = null;
 let userLongitude = null;
+let selectingLocation = false;
+let selectedLatitude = null;
+let selectedLongitude = null;
+let temporaryMarker = null;
+let locationCursorMarker = null;
 
 function getUserLocation() {
 
@@ -123,4 +128,99 @@ distanceInput.addEventListener('change', () => {
     }
 
     loadRestaurants(userLatitude, userLongitude, distanceKm);
+});
+
+const addRestaurantButton = document.getElementById('addRestaurantButton');
+const restaurantModal = document.getElementById('restaurantModal');
+const closeModalButton = document.getElementById('closeModalButton');
+
+addRestaurantButton.addEventListener('click', () => {
+    selectingLocation = true;
+
+    const mapElement = document.getElementById('map');
+
+    mapElement.classList.add('selecting-location');
+
+    // Cria o marcador que acompanhará o mouse
+    if (!locationCursorMarker) {
+        locationCursorMarker = L.marker(map.getCenter(), {
+            icon: createLocationIcon(),
+            interactive: false
+        }).addTo(map);
+    }
+
+    locationCursorMarker.setLatLng(map.getCenter());
+});
+
+closeModalButton.addEventListener('click', () => {
+    restaurantModal.style.display = 'none';
+});
+
+restaurantModal.addEventListener('click', (event) => {
+    if (event.target === restaurantModal) {
+        restaurantModal.style.display = 'none';
+    }
+});
+
+map.on('click', (event) => {
+
+    if (!selectingLocation) {
+        return;
+    }
+
+    selectedLatitude = event.latlng.lat;
+    selectedLongitude = event.latlng.lng;
+
+    // Encerra o acompanhamento do mouse
+    selectingLocation = false;
+
+    document.getElementById('map')
+        .classList.remove('selecting-location');
+
+    // Remove o ícone que acompanhava o mouse
+    if (locationCursorMarker) {
+        map.removeLayer(locationCursorMarker);
+        locationCursorMarker = null;
+    }
+
+    // Cria o marcador fixo na localização escolhida
+    temporaryMarker = L.marker([
+        selectedLatitude,
+        selectedLongitude
+    ], {
+        icon: createLocationIcon()
+    }).addTo(map);
+
+    // Abre o modal
+    restaurantModal.style.display = 'flex';
+
+    console.log('Latitude:', selectedLatitude);
+    console.log('Longitude:', selectedLongitude);
+});
+
+function createLocationIcon() {
+    return L.divIcon({
+        className: 'location-cursor',
+        html: `
+            <svg viewBox="0 0 24 24" fill="#619b3d"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 22s8-7.5 8-13A8 8 0 0 0 4 9c0 5.5 8 13 8 13Z"
+                    stroke="white"
+                    stroke-width="1.5"
+                />
+                <circle cx="12" cy="9" r="2.5" fill="white"/>
+            </svg>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
+    });
+}
+
+map.on('mousemove', (event) => {
+    if (!selectingLocation) {
+        return;
+    }
+
+    locationCursorMarker.setLatLng(event.latlng);
 });
