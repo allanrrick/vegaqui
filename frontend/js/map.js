@@ -154,12 +154,12 @@ addRestaurantButton.addEventListener('click', () => {
 });
 
 closeModalButton.addEventListener('click', () => {
-    restaurantModal.style.display = 'none';
+    closeRestaurantModal();
 });
 
 restaurantModal.addEventListener('click', (event) => {
     if (event.target === restaurantModal) {
-        restaurantModal.style.display = 'none';
+        closeRestaurantModal();
     }
 });
 
@@ -253,13 +253,7 @@ restaurantForm.addEventListener('submit', async (event) => {
 
         console.log(savedRestaurant);
 
-        restaurantModal.style.display = 'none';
-        restaurantForm.reset();
-
-        if (temporaryMarker) {
-            map.removeLayer(temporaryMarker);
-            temporaryMarker = null;
-        }
+        console.log(savedRestaurant);
 
         await loadRestaurants(
             userLatitude,
@@ -270,7 +264,31 @@ restaurantForm.addEventListener('submit', async (event) => {
         alert('Restaurante cadastrado com sucesso!');
 
     } catch (error) {
-        console.error('Erro:', error);
+        console.error(error);
         alert('Não foi possível cadastrar o restaurante.');
     }
 });
+
+function closeRestaurantModal() {
+    restaurantModal.style.display = 'none';
+
+    restaurantForm.reset();
+
+    selectedLatitude = null;
+    selectedLongitude = null;
+
+    if (temporaryMarker) {
+        map.removeLayer(temporaryMarker);
+        temporaryMarker = null;
+    }
+
+    if (locationCursorMarker) {
+        map.removeLayer(locationCursorMarker);
+        locationCursorMarker = null;
+    }
+
+    selectingLocation = false;
+
+    document.getElementById('map')
+        .classList.remove('selecting-location');
+}
