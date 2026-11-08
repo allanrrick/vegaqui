@@ -6,7 +6,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 let userMarker = null;
-let restaurantMarkers = [];
+let restaurantMarkers = []
+let userLatitude = null;
+let userLongitude = null;
 
 function getUserLocation() {
 
@@ -21,6 +23,8 @@ function getUserLocation() {
 
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
+            userLatitude = latitude;
+            userLongitude = longitude;
 
             map.flyTo([latitude, longitude], 15);
             loadRestaurants(latitude, longitude);
@@ -102,3 +106,21 @@ async function loadRestaurants(latitude, longitude, distanceKm = 5) {
         console.error('Error:', error);
     }
 }
+
+const distanceInput = document.getElementById('distanceInput');
+
+distanceInput.addEventListener('change', () => {
+    let distanceKm = Number(distanceInput.value);
+
+    if (!Number.isFinite(distanceKm) || distanceKm < 1) {
+        distanceKm = 1;
+        distanceInput.value = 1;
+    }
+
+    if (userLatitude === null || userLongitude === null) {
+        alert('Não foi possível identificar sua localização.');
+        return;
+    }
+
+    loadRestaurants(userLatitude, userLongitude, distanceKm);
+});
