@@ -14,6 +14,7 @@ let selectedLatitude = null;
 let selectedLongitude = null;
 let temporaryMarker = null;
 let locationCursorMarker = null;
+let allRestaurants = [];
 
 function getUserLocation() {
 
@@ -86,6 +87,7 @@ async function loadRestaurants(latitude, longitude, distanceKm = 5) {
         const restaurants = await response.json();
         console.log(restaurants);
         console.log(restaurants[0]);
+        allRestaurants = restaurants;
 
         restaurantMarkers.forEach(marker => map.removeLayer(marker));
         restaurantMarkers = [];
@@ -141,7 +143,6 @@ addRestaurantButton.addEventListener('click', () => {
 
     mapElement.classList.add('selecting-location');
 
-    // Cria o marcador que acompanhará o mouse
     if (!locationCursorMarker) {
         locationCursorMarker = L.marker(map.getCenter(), {
             icon: createLocationIcon(),
@@ -171,19 +172,16 @@ map.on('click', (event) => {
     selectedLatitude = event.latlng.lat;
     selectedLongitude = event.latlng.lng;
 
-    // Encerra o acompanhamento do mouse
     selectingLocation = false;
 
     document.getElementById('map')
         .classList.remove('selecting-location');
 
-    // Remove o ícone que acompanhava o mouse
     if (locationCursorMarker) {
         map.removeLayer(locationCursorMarker);
         locationCursorMarker = null;
     }
 
-    // Cria o marcador fixo na localização escolhida
     temporaryMarker = L.marker([
         selectedLatitude,
         selectedLongitude
@@ -191,7 +189,6 @@ map.on('click', (event) => {
         icon: createLocationIcon()
     }).addTo(map);
 
-    // Abre o modal
     restaurantModal.style.display = 'flex';
 
     console.log('Latitude:', selectedLatitude);
@@ -223,4 +220,57 @@ map.on('mousemove', (event) => {
     }
 
     locationCursorMarker.setLatLng(event.latlng);
+});
+
+const restaurantForm = document.getElementById('restaurantForm');
+
+restaurantForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const restaurant = {
+        name: document.getElementById('restaurantName').value,
+        type: document.getElementById('restaurantType').value,
+        address: document.getElementById('restaurantAddress').value,
+        description: document.getElementById('restaurantDescription').value,
+        latitude: selectedLatitude,
+        longitude: selectedLongitude
+    };
+
+    try {
+        const response = await fetch('http://localhost:3000/restaurants', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(restaurant)
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao cadastrar restaurante.');
+        }
+
+        const savedRestaurant = await response.json();
+
+        console.log(savedRestaurant);
+
+        restaurantModal.style.display = 'none';
+        restaurantForm.reset();
+
+        if (temporaryMarker) {
+            map.removeLayer(temporaryMarker);
+            temporaryMarker = null;
+        }
+
+        await loadRestaurants(
+            userLatitude,
+            userLongitude,
+            Number(distanceInput.value) || 5
+        );
+
+        alert('Restaurante cadastrado com sucesso!');
+
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Não foi possível cadastrar o restaurante.');
+    }
 });
