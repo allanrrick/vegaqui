@@ -6,7 +6,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 let userMarker = null;
-let accuracyCircle = null;
+let restaurantMarkers = [];
 
 function getUserLocation() {
 
@@ -21,21 +21,16 @@ function getUserLocation() {
 
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
 
             map.flyTo([latitude, longitude], 15);
             loadRestaurants(latitude, longitude);
 
-            if (userMarker) {
-                map.removeLayer(userMarker);
-            }
+            // if (userMarker) {
+            //     map.removeLayer(userMarker);
+            // }
 
-            if (accuracyCircle) {
-                map.removeLayer(accuracyCircle);
-            }
-
-            userMarker = L.marker([latitude, longitude])
-                .addTo(map)
+            // userMarker = L.marker([latitude, longitude])
+            //     .addTo(map)
 
         },
 
@@ -76,10 +71,31 @@ async function loadRestaurants(latitude, longitude, distanceKm = 5) {
         );
 
         if (!response.ok) {
-            throw new Error('Response error');
+            throw new Error(`error: ${response.status}`);
         }
 
         const restaurants = await response.json();
+        console.log(restaurants);
+        console.log(restaurants[0]);
+
+        restaurantMarkers.forEach(marker => map.removeLayer(marker));
+        restaurantMarkers = [];
+
+        restaurants.forEach(restaurant => {
+            const marker = L.marker([
+                restaurant.latitude,
+                restaurant.longitude
+            ]).addTo(map);
+
+            marker.bindPopup(`
+                <strong>${restaurant.name}</strong>
+                <p>${restaurant.address}</p>
+                <p>${restaurant.type}</p>
+            `);
+
+            restaurantMarkers.push(marker);
+        });
+
         console.log(restaurants);
 
     } catch (error) {
