@@ -72,6 +72,30 @@ function getUserLocation() {
 
 getUserLocation();
 
+function displayRestaurants(restaurants) {
+
+    restaurantMarkers.forEach(marker => {
+        map.removeLayer(marker);
+    });
+
+    restaurantMarkers = [];
+
+    restaurants.forEach(restaurant => {
+        const marker = L.marker([
+            restaurant.latitude,
+            restaurant.longitude
+        ]).addTo(map);
+
+        marker.bindPopup(`
+            <strong>${restaurant.name}</strong>
+            <p>${restaurant.address}</p>
+            <p>${restaurant.type}</p>
+        `);
+
+        restaurantMarkers.push(marker);
+    });
+}
+
 async function loadRestaurants(latitude, longitude, distanceKm = 5) {
     try {
         const distance = distanceKm * 1000;
@@ -89,25 +113,7 @@ async function loadRestaurants(latitude, longitude, distanceKm = 5) {
         console.log(restaurants[0]);
         allRestaurants = restaurants;
 
-        restaurantMarkers.forEach(marker => map.removeLayer(marker));
-        restaurantMarkers = [];
-
-        restaurants.forEach(restaurant => {
-            const marker = L.marker([
-                restaurant.latitude,
-                restaurant.longitude
-            ]).addTo(map);
-
-            marker.bindPopup(`
-                <strong>${restaurant.name}</strong>
-                <p>${restaurant.address}</p>
-                <p>${restaurant.type}</p>
-            `);
-
-            restaurantMarkers.push(marker);
-        });
-
-        console.log(restaurants);
+        displayRestaurants(allRestaurants);
 
     } catch (error) {
         console.error('Error:', error);
