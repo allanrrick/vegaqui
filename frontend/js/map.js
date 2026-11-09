@@ -437,3 +437,40 @@ function editRestaurant(id) {
 
     restaurantModal.style.display = 'flex';
 }
+
+async function deleteRestaurant(id) {
+    const confirmation = confirm(
+        'Confirmar exclusão'
+    );
+
+    if (!confirmation) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://localhost:3000/restaurants/${id}`,
+            {
+                method: 'DELETE'
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.erro || 'Erro ao excluir restaurante.');
+        }
+
+        alert('Restaurante excluído com sucesso!');
+
+        await loadRestaurants(
+            userLatitude,
+            userLongitude,
+            Number(distanceInput.value) || 5
+        );
+
+    } catch (error) {
+        console.error(error);
+        alert('Não foi possível excluir o restaurante.');
+    }
+}
