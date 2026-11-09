@@ -313,3 +313,77 @@ function closeRestaurantModal() {
     document.getElementById('map')
         .classList.remove('selecting-location');
 }
+
+const searchInput = document.getElementById('searchInput');
+let currentSearchIndex = -1;
+
+searchInput.addEventListener('input', () => {
+    const searchTerm = searchInput.value
+        .trim()
+        .toLowerCase();
+
+    const filteredRestaurants = allRestaurants.filter(restaurant =>
+        restaurant.name.toLowerCase().includes(searchTerm)
+    );
+
+    currentSearchIndex = -1;
+
+    displayRestaurants(filteredRestaurants);
+});
+
+searchInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') {
+        return;
+    }
+
+    event.preventDefault();
+
+    const searchTerm = searchInput.value
+        .trim()
+        .toLowerCase();
+
+    if (!searchTerm) {
+        return;
+    }
+
+    const filteredRestaurants = allRestaurants.filter(restaurant =>
+        restaurant.name.toLowerCase().includes(searchTerm)
+    );
+
+    if (filteredRestaurants.length === 0) {
+        alert('Nenhum restaurante encontrado.');
+        currentSearchIndex = -1;
+        return;
+    }
+
+    currentSearchIndex++;
+
+    if (currentSearchIndex >= filteredRestaurants.length) {
+        currentSearchIndex = 0;
+    }
+
+    const restaurant = filteredRestaurants[currentSearchIndex];
+
+    map.flyTo(
+        [restaurant.latitude, restaurant.longitude],
+        17
+    );
+
+    const marker = restaurantMarkers.find(marker => {
+        const position = marker.getLatLng();
+
+        return (
+            position.lat === Number(restaurant.latitude) &&
+            position.lng === Number(restaurant.longitude)
+        );
+    });
+
+    if (marker) {
+        marker.openPopup();
+    }
+
+    console.log(
+        `Restaurante ${currentSearchIndex + 1} de ${filteredRestaurants.length}:`,
+        restaurant.name
+    );
+});
