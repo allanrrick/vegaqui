@@ -16,6 +16,8 @@ let temporaryMarker = null;
 let locationCursorMarker = null;
 let allRestaurants = [];
 let editingRestaurantId = null;
+let currentSearchLatitude = null;
+let currentSearchLongitude = null;
 
 function getUserLocation() {
 
@@ -32,6 +34,8 @@ function getUserLocation() {
             const longitude = position.coords.longitude;
             userLatitude = latitude;
             userLongitude = longitude;
+            currentSearchLatitude = latitude;
+            currentSearchLongitude = longitude;
 
             map.flyTo([latitude, longitude], 15);
             loadRestaurants(latitude, longitude);
@@ -143,12 +147,11 @@ distanceInput.addEventListener('change', () => {
         distanceInput.value = 1;
     }
 
-    if (userLatitude === null || userLongitude === null) {
-        alert('Não foi possível identificar sua localização.');
-        return;
-    }
-
-    loadRestaurants(userLatitude, userLongitude, distanceKm);
+    loadRestaurants(
+        currentSearchLatitude,
+        currentSearchLongitude,
+        distanceKm
+    );
 });
 
 const addRestaurantButton = document.getElementById('addRestaurantButton');
@@ -356,61 +359,51 @@ searchInput.addEventListener('input', () => {
     displayRestaurants(filteredRestaurants);
 });
 
-searchInput.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter') {
-        return;
-    }
+searchInput.addEventListener('keydown', async (event) => {
+    if (event.key !== 'Enter') return;
 
     event.preventDefault();
 
-    const searchTerm = searchInput.value
-        .trim()
-        .toLowerCase();
+    const searchTerm = searchInput.value.trim().toLowerCase();
 
-    if (!searchTerm) {
-        return;
-    }
+    if (!searchTerm) return;
 
     const filteredRestaurants = allRestaurants.filter(restaurant =>
         restaurant.name.toLowerCase().includes(searchTerm)
     );
 
-    if (filteredRestaurants.length === 0) {
-        alert('Nenhum restaurante encontrado.');
-        currentSearchIndex = -1;
+    if (filteredRestaurants.length > 0) {
+
+        currentSearchIndex++;
+
+        if (currentSearchIndex >= filteredRestaurants.length) {
+            currentSearchIndex = 0;
+        }
+
+        const restaurant = filteredRestaurants[currentSearchIndex];
+
+        map.flyTo([
+            restaurant.latitude,
+            restaurant.longitude
+        ], 17);
+
+        const marker = restaurantMarkers.find(marker => {
+            const position = marker.getLatLng();
+
+            return (
+                position.lat === Number(restaurant.latitude) &&
+                position.lng === Number(restaurant.longitude)
+            );
+        });
+
+        if (marker) marker.openPopup();
+
         return;
     }
 
-    currentSearchIndex++;
+    currentSearchIndex = -1;
 
-    if (currentSearchIndex >= filteredRestaurants.length) {
-        currentSearchIndex = 0;
-    }
-
-    const restaurant = filteredRestaurants[currentSearchIndex];
-
-    map.flyTo(
-        [restaurant.latitude, restaurant.longitude],
-        17
-    );
-
-    const marker = restaurantMarkers.find(marker => {
-        const position = marker.getLatLng();
-
-        return (
-            position.lat === Number(restaurant.latitude) &&
-            position.lng === Number(restaurant.longitude)
-        );
-    });
-
-    if (marker) {
-        marker.openPopup();
-    }
-
-    console.log(
-        `Restaurante ${currentSearchIndex + 1} de ${filteredRestaurants.length}:`,
-        restaurant.name
-    );
+    await searchLocation(searchTerm);
 });
 
 function editRestaurant(id) {
@@ -464,13 +457,54 @@ async function deleteRestaurant(id) {
         alert('Restaurante excluído com sucesso!');
 
         await loadRestaurants(
-            userLatitude,
-            userLongitude,
+            currentSearchLatitude,
+            currentSearchLongitude,
             Number(distanceInput.value) || 5
         );
 
     } catch (error) {
         console.error(error);
         alert('Não foi possível excluir o restaurante.');
+    }
+}
+
+async function searchLocation(searchTerm) {
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(searchTerm)}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error('Erro ao pesquisar localização.');
+        }
+
+        const results = await response.json();
+
+        if (results.length === 0) {
+            showToast('Localização não encontrada.', 'error');
+            return;
+        }
+
+        const latitude = Number(results[0].lat);
+        const longitude = Number(results[0].lon);
+
+        currentSearchLatitude = latitude;
+        currentSearchLongitude = longitude;
+
+        currentSearchIndex = -1;
+
+        map.flyTo([latitude, longitude], 14);
+
+        await loadRestaurants(
+            latitude,
+            longitude,
+            Number(distanceInput.value) || 5
+        );
+
+        showToast('Localização encontrada!');
+
+    } catch (error) {
+        console.error('Erro na busca:', error);
+        showToast('Não foi possível pesquisar essa localização.', 'error');
     }
 }

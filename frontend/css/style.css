@@ -254,3 +254,26 @@ footer a {
 .delete-button:hover {
     background-color: #c9302c;
 }
+
+.address-container {
+    display: flex;
+    gap: 8px;
+}
+
+.address-container input {
+    flex: 1;
+    min-width: 0;
+}
+
+.address-container button {
+    border: none;
+    border-radius: 6px;
+    padding: 0 14px;
+    background-color: #619b3d;
+    color: white;
+    cursor: pointer;
+}
+
+.address-container button:hover {
+    background-color: #4d8030;
+}
