@@ -119,7 +119,7 @@ async function loadRestaurants(latitude, longitude, distanceKm = 5) {
         const distance = distanceKm * 1000;
 
         const response = await fetch(
-            `http://https://vegaqui.onrender.com/restaurants/nearby?latitude=${latitude}&longitude=${longitude}&distance=${distance}`
+            `${API_BASE_URL}/restaurants/nearby?latitude=${latitude}&longitude=${longitude}&distance=${distance}`
         );
 
         if (!response.ok) {
@@ -277,8 +277,8 @@ restaurantForm.addEventListener('submit', async (event) => {
     const isEditing = editingRestaurantId !== null;
 
     const url = isEditing
-        ? `http://https://vegaqui.onrender.com/restaurants/${editingRestaurantId}`
-        : 'http://https://vegaqui.onrender.com/restaurants';
+        ? `${API_BASE_URL}/restaurants/${editingRestaurantId}`
+        : `${API_BASE_URL}/restaurants`;
 
     try {
         const response = await fetch(url, {
@@ -443,7 +443,7 @@ async function deleteRestaurant(id) {
 
     try {
         const response = await fetch(
-            `http://https://vegaqui.onrender.com/restaurants/${id}`,
+            `${API_BASE_URL}/restaurants/${id}`,
             {
                 method: 'DELETE'
             }
@@ -520,7 +520,7 @@ async function loadRestaurantsOnMap() {
         const west = bounds.getWest();
 
         const response = await fetch(
-            `http://https://vegaqui.onrender.com/restaurants/map?north=${north}&south=${south}&east=${east}&west=${west}`
+            `${API_BASE_URL}/restaurants/map?north=${north}&south=${south}&east=${east}&west=${west}`
         );
 
         if (!response.ok) {
