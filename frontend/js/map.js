@@ -227,11 +227,26 @@ const restaurantForm = document.getElementById('restaurantForm');
 restaurantForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    const name = document.getElementById('restaurantName').value.trim();
+    const type = document.getElementById('restaurantType').value;
+    const address = document.getElementById('restaurantAddress').value.trim();
+    const description = document.getElementById('restaurantDescription').value.trim();
+
+    if (!type) {
+        alert('Selecione o tipo do restaurante.');
+        return;
+    }
+
+    if (address.length < 5) {
+        alert('Informe um endereço válido.');
+        return;
+    }
+
     const restaurant = {
-        name: document.getElementById('restaurantName').value,
-        type: document.getElementById('restaurantType').value,
-        address: document.getElementById('restaurantAddress').value,
-        description: document.getElementById('restaurantDescription').value,
+        name,
+        type,
+        address,
+        description,
         latitude: selectedLatitude,
         longitude: selectedLongitude
     };
