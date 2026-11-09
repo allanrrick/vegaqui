@@ -508,3 +508,43 @@ async function searchLocation(searchTerm) {
         showToast('Não foi possível pesquisar essa localização.', 'error');
     }
 }
+
+async function loadRestaurantsOnMap() {
+    try {
+        const bounds = map.getBounds();
+
+        const north = bounds.getNorth();
+        const south = bounds.getSouth();
+        const east = bounds.getEast();
+        const west = bounds.getWest();
+
+        const response = await fetch(
+            `http://localhost:3000/restaurants/map?north=${north}&south=${south}&east=${east}&west=${west}`
+        );
+
+        if (!response.ok) {
+            throw new Error('Erro ao carregar restaurantes do mapa.');
+        }
+
+        const restaurants = await response.json();
+
+        const normalizedRestaurants = restaurants.map(restaurant => ({
+            ...restaurant,
+            latitude: Number(restaurant.latitude ?? restaurant.lat),
+            longitude: Number(restaurant.longitude ?? restaurant.lng)
+        }));
+
+        allRestaurants = normalizedRestaurants;
+
+        displayRestaurants(allRestaurants);
+
+        console.log('restaurantes area visivel:', allRestaurants);
+
+    } catch (error) {
+        console.error('Erro ao buscar restaurantes no mapa:', error);
+    }
+}
+
+map.on('moveend', () => {
+    loadRestaurantsOnMap();
+});
