@@ -223,3 +223,34 @@ footer a {
     height: 40px;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
+
+.popup-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.popup-actions button {
+    border: none;
+    padding: 7px 12px;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.edit-button {
+    background-color: #619b3d;
+}
+
+.delete-button {
+    background-color: #d9534f;
+}
+
+.edit-button:hover {
+    background-color: #4d8030;
+}
+
+.delete-button:hover {
+    background-color: #c9302c;
+}

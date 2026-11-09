@@ -15,6 +15,7 @@ let selectedLongitude = null;
 let temporaryMarker = null;
 let locationCursorMarker = null;
 let allRestaurants = [];
+let editingRestaurantId = null;
 
 function getUserLocation() {
 
@@ -73,11 +74,7 @@ function getUserLocation() {
 getUserLocation();
 
 function displayRestaurants(restaurants) {
-
-    restaurantMarkers.forEach(marker => {
-        map.removeLayer(marker);
-    });
-
+    restaurantMarkers.forEach(marker => map.removeLayer(marker));
     restaurantMarkers = [];
 
     restaurants.forEach(restaurant => {
@@ -87,9 +84,25 @@ function displayRestaurants(restaurants) {
         ]).addTo(map);
 
         marker.bindPopup(`
-            <strong>${restaurant.name}</strong>
-            <p>${restaurant.address}</p>
-            <p>${restaurant.type}</p>
+            <div>
+                <strong>${restaurant.name}</strong>
+                <p>${restaurant.address}</p>
+                <p>${restaurant.type}</p>
+
+                <div class="popup-actions">
+                    <button
+                        onclick="editRestaurant(${restaurant.id})"
+                        class="edit-button">
+                        Editar
+                    </button>
+
+                    <button
+                        onclick="deleteRestaurant(${restaurant.id})"
+                        class="delete-button">
+                        Excluir
+                    </button>
+                </div>
+            </div>
         `);
 
         restaurantMarkers.push(marker);
@@ -257,9 +270,15 @@ restaurantForm.addEventListener('submit', async (event) => {
         longitude: selectedLongitude
     };
 
+    const isEditing = editingRestaurantId !== null;
+
+    const url = isEditing
+        ? `http://localhost:3000/restaurants/${editingRestaurantId}`
+        : 'http://localhost:3000/restaurants';
+
     try {
-        const response = await fetch('http://localhost:3000/restaurants', {
-            method: 'POST',
+        const response = await fetch(url, {
+            method: isEditing ? 'PUT' : 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -267,14 +286,16 @@ restaurantForm.addEventListener('submit', async (event) => {
         });
 
         if (!response.ok) {
-            throw new Error('Erro ao cadastrar restaurante.');
+            throw new Error('Erro ao salvar restaurante.');
         }
 
         const savedRestaurant = await response.json();
 
         console.log(savedRestaurant);
 
-        console.log(savedRestaurant);
+        editingRestaurantId = null;
+
+        closeRestaurantModal();
 
         await loadRestaurants(
             userLatitude,
@@ -282,11 +303,15 @@ restaurantForm.addEventListener('submit', async (event) => {
             Number(distanceInput.value) || 5
         );
 
-        alert('Restaurante cadastrado com sucesso!');
+        alert(
+            isEditing
+                ? 'Restaurante atualizado com sucesso!'
+                : 'Restaurante cadastrado com sucesso!'
+        );
 
     } catch (error) {
         console.error(error);
-        alert('Não foi possível cadastrar o restaurante.');
+        alert('Não foi possível salvar o restaurante.');
     }
 });
 
@@ -387,3 +412,28 @@ searchInput.addEventListener('keydown', (event) => {
         restaurant.name
     );
 });
+
+function editRestaurant(id) {
+
+    const restaurant = allRestaurants.find(
+        restaurant => Number(restaurant.id) === Number(id)
+    );
+
+    if (!restaurant) {
+        alert('Restaurante não encontrado.');
+        return;
+    }
+
+    editingRestaurantId = restaurant.id;
+
+    document.getElementById('restaurantName').value = restaurant.name;
+    document.getElementById('restaurantType').value = restaurant.type;
+    document.getElementById('restaurantAddress').value = restaurant.address;
+    document.getElementById('restaurantDescription').value =
+        restaurant.description || '';
+
+    selectedLatitude = Number(restaurant.latitude);
+    selectedLongitude = Number(restaurant.longitude);
+
+    restaurantModal.style.display = 'flex';
+}
