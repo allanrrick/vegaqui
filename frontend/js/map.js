@@ -88,11 +88,17 @@ function displayRestaurants(restaurants) {
             restaurant.longitude
         ]).addTo(map);
 
+        const categoryText = restaurant.type === 'vegan'
+            ? 'Serve opções veganas'
+            : restaurant.type === 'vegetarian'
+                ? 'Serve opções vegetarianas'
+                : 'Categoria não informada';
+
         marker.bindPopup(`
             <div>
                 <strong>${restaurant.name}</strong>
                 <p>${restaurant.address}</p>
-                <p>${restaurant.type}</p>
+                <p>${categoryText}</p>
 
                 <div class="popup-actions">
                     <button
