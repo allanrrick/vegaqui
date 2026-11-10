@@ -97,7 +97,11 @@ function displayRestaurants(restaurants) {
         marker.bindPopup(`
             <div>
                 <strong>${restaurant.name}</strong>
+
+                <p>${restaurant.description || 'Sem descrição cadastrada.'}</p>
+
                 <p>${restaurant.address}</p>
+
                 <p>${categoryText}</p>
 
                 <div class="popup-actions">
