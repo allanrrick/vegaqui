@@ -1,3 +1,4 @@
+const API_BASE_URL = 'https://vegaqui.onrender.com';
 const map = L.map('map').setView([-14.235, -51.925], 4);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -18,6 +19,31 @@ let allRestaurants = [];
 let editingRestaurantId = null;
 let currentSearchLatitude = null;
 let currentSearchLongitude = null;
+let activeSearchMode = 'nearby';
+let latestRestaurantsRequest = 0;
+let suppressMapMoveSearch = false;
+
+function flyToWithoutMapSearch(latitude, longitude, zoom) {
+    const currentCenter = map.getCenter();
+    const currentZoom = map.getZoom();
+
+    const sameLocation =
+        Math.abs(currentCenter.lat - latitude) < 0.000001 &&
+        Math.abs(currentCenter.lng - longitude) < 0.000001 &&
+        currentZoom === zoom;
+
+    if (sameLocation) {
+        return;
+    }
+
+    suppressMapMoveSearch = true;
+
+    map.once('moveend', () => {
+        suppressMapMoveSearch = false;
+    });
+
+    map.flyTo([latitude, longitude], zoom);
+}
 
 function getUserLocation() {
 
@@ -37,7 +63,8 @@ function getUserLocation() {
             currentSearchLatitude = latitude;
             currentSearchLongitude = longitude;
 
-            map.flyTo([latitude, longitude], 15);
+            flyToWithoutMapSearch(latitude, longitude, 15);
+
             loadRestaurants(latitude, longitude);
 
             // if (userMarker) {
@@ -87,11 +114,21 @@ function displayRestaurants(restaurants) {
             restaurant.longitude
         ]).addTo(map);
 
+        const categoryText = restaurant.type === 'vegan'
+            ? 'Serve opções veganas'
+            : restaurant.type === 'vegetarian'
+                ? 'Serve opções vegetarianas'
+                : 'Categoria não informada';
+
         marker.bindPopup(`
             <div>
                 <strong>${restaurant.name}</strong>
+
+                <p>${restaurant.description || 'Sem descrição cadastrada.'}</p>
+
                 <p>${restaurant.address}</p>
-                <p>${restaurant.type}</p>
+
+                <p>${categoryText}</p>
 
                 <div class="popup-actions">
                     <button
@@ -114,29 +151,45 @@ function displayRestaurants(restaurants) {
 }
 
 async function loadRestaurants(latitude, longitude, distanceKm = 5) {
+    if (latitude == null || longitude == null) {
+        return;
+    }
+
+    activeSearchMode = 'nearby';
+
+    const requestId = ++latestRestaurantsRequest;
+
     try {
         const distance = distanceKm * 1000;
 
         const response = await fetch(
-            `http://localhost:3000/restaurants/nearby?latitude=${latitude}&longitude=${longitude}&distance=${distance}`
+            `${API_BASE_URL}/restaurants/nearby?latitude=${latitude}&longitude=${longitude}&distance=${distance}`
         );
 
         if (!response.ok) {
-            throw new Error(`error: ${response.status}`);
+            throw new Error(`Erro: ${response.status}`);
         }
 
         const restaurants = await response.json();
-        console.log(restaurants);
-        console.log(restaurants[0]);
-        allRestaurants = restaurants;
+
+        if (requestId !== latestRestaurantsRequest) {
+            return;
+        }
+
+        allRestaurants = restaurants.map(restaurant => ({
+            ...restaurant,
+            latitude: Number(restaurant.latitude ?? restaurant.lat),
+            longitude: Number(restaurant.longitude ?? restaurant.lng)
+        }));
 
         displayRestaurants(allRestaurants);
 
+        console.log('Restaurantes por distância:', allRestaurants);
+
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Erro ao carregar restaurantes por distância:', error);
     }
 }
-
 const distanceInput = document.getElementById('distanceInput');
 
 distanceInput.addEventListener('change', () => {
@@ -276,8 +329,8 @@ restaurantForm.addEventListener('submit', async (event) => {
     const isEditing = editingRestaurantId !== null;
 
     const url = isEditing
-        ? `http://localhost:3000/restaurants/${editingRestaurantId}`
-        : 'http://localhost:3000/restaurants';
+        ? `${API_BASE_URL}/restaurants/${editingRestaurantId}`
+        : `${API_BASE_URL}/restaurants`;
 
     try {
         const response = await fetch(url, {
@@ -300,11 +353,7 @@ restaurantForm.addEventListener('submit', async (event) => {
 
         closeRestaurantModal();
 
-        await loadRestaurants(
-            userLatitude,
-            userLongitude,
-            Number(distanceInput.value) || 5
-        );
+        await reloadActiveRestaurants();
 
         alert(
             isEditing
@@ -382,10 +431,11 @@ searchInput.addEventListener('keydown', async (event) => {
 
         const restaurant = filteredRestaurants[currentSearchIndex];
 
-        map.flyTo([
-            restaurant.latitude,
-            restaurant.longitude
-        ], 17);
+        flyToWithoutMapSearch(
+            Number(restaurant.latitude),
+            Number(restaurant.longitude),
+            15
+        );
 
         const marker = restaurantMarkers.find(marker => {
             const position = marker.getLatLng();
@@ -442,7 +492,7 @@ async function deleteRestaurant(id) {
 
     try {
         const response = await fetch(
-            `http://localhost:3000/restaurants/${id}`,
+            `${API_BASE_URL}/restaurants/${id}`,
             {
                 method: 'DELETE'
             }
@@ -456,11 +506,7 @@ async function deleteRestaurant(id) {
 
         alert('Restaurante excluído com sucesso!');
 
-        await loadRestaurants(
-            currentSearchLatitude,
-            currentSearchLongitude,
-            Number(distanceInput.value) || 5
-        );
+        await reloadActiveRestaurants();
 
     } catch (error) {
         console.error(error);
@@ -493,13 +539,14 @@ async function searchLocation(searchTerm) {
 
         currentSearchIndex = -1;
 
-        map.flyTo([latitude, longitude], 14);
+        flyToWithoutMapSearch(latitude, longitude, 15);
 
         await loadRestaurants(
             latitude,
             longitude,
             Number(distanceInput.value) || 5
         );
+
 
         showToast('Localização encontrada!');
 
@@ -510,6 +557,8 @@ async function searchLocation(searchTerm) {
 }
 
 async function loadRestaurantsOnMap() {
+    const requestId = ++latestRestaurantsRequest;
+
     try {
         const bounds = map.getBounds();
 
@@ -519,7 +568,7 @@ async function loadRestaurantsOnMap() {
         const west = bounds.getWest();
 
         const response = await fetch(
-            `http://localhost:3000/restaurants/map?north=${north}&south=${south}&east=${east}&west=${west}`
+            `${API_BASE_URL}/restaurants/map?north=${north}&south=${south}&east=${east}&west=${west}`
         );
 
         if (!response.ok) {
@@ -528,17 +577,19 @@ async function loadRestaurantsOnMap() {
 
         const restaurants = await response.json();
 
-        const normalizedRestaurants = restaurants.map(restaurant => ({
+        if (requestId !== latestRestaurantsRequest) {
+            return;
+        }
+
+        allRestaurants = restaurants.map(restaurant => ({
             ...restaurant,
             latitude: Number(restaurant.latitude ?? restaurant.lat),
             longitude: Number(restaurant.longitude ?? restaurant.lng)
         }));
 
-        allRestaurants = normalizedRestaurants;
-
         displayRestaurants(allRestaurants);
 
-        console.log('restaurantes area visivel:', allRestaurants);
+        console.log('Restaurantes na área visível:', allRestaurants);
 
     } catch (error) {
         console.error('Erro ao buscar restaurantes no mapa:', error);
@@ -546,5 +597,24 @@ async function loadRestaurantsOnMap() {
 }
 
 map.on('moveend', () => {
+    if (suppressMapMoveSearch) {
+        return;
+    }
+
+    activeSearchMode = 'map';
+
     loadRestaurantsOnMap();
 });
+
+async function reloadActiveRestaurants() {
+    if (activeSearchMode === 'map') {
+        await loadRestaurantsOnMap();
+        return;
+    }
+
+    await loadRestaurants(
+        currentSearchLatitude,
+        currentSearchLongitude,
+        Number(distanceInput.value) || 5
+    );
+}
